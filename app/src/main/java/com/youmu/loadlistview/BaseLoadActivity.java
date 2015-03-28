@@ -152,6 +152,7 @@ public abstract class BaseLoadActivity extends ActionBarActivity implements Adap
                 isLoading = true;
 //                mLoadLayout.setVisibility(View.VISIBLE);
                 mListView.addFooterView(mFootView);
+                mListView.setSelection(mListView.getBottom());
                 // 加载更多
                 loadNextData();
             }
