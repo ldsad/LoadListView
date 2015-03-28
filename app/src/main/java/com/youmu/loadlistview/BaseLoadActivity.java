@@ -30,6 +30,7 @@ public abstract class BaseLoadActivity extends ActionBarActivity implements Adap
     private int totalItemCount;// Item总数量；
     private int lastVisibleItem;// 最后一个可见的item；
     boolean isLoading;// 正在加载；
+    View mFootView;
 
     public void initLoad(Context ctx, SwipeRefreshLayout swipeLayout, ListView listView, ViewStub mEmptyVs, BaseAdapter adapter) {
         this.ctx = ctx;
@@ -67,10 +68,6 @@ public abstract class BaseLoadActivity extends ActionBarActivity implements Adap
     }
 
     private void initView() {
-        // 添加FootView
-        View mFootView = View.inflate(ctx, R.layout.loading_more, null);
-        mLoadLayout = mFootView.findViewById(R.id.more_load_layout);
-        mLoadLayout.setVisibility(View.GONE);
 
         mSwipeLayout.setColorScheme(android.R.color.holo_red_light, android.R.color.holo_blue_dark, android.R.color.holo_green_light, android.R.color.holo_orange_light);
         mSwipeLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
@@ -81,7 +78,11 @@ public abstract class BaseLoadActivity extends ActionBarActivity implements Adap
             }
         });
 
-        mListView.addFooterView(mFootView);
+        // 添加FootView
+        mFootView = View.inflate(ctx, R.layout.loading_more, null);
+        mLoadLayout = mFootView.findViewById(R.id.more_load_layout);
+//        mLoadLayout.setVisibility(View.GONE);
+
         mListView.setAdapter(mAdapter);
         mListView.setOnItemClickListener(this);
         mListView.setOnScrollListener(this);
@@ -129,7 +130,8 @@ public abstract class BaseLoadActivity extends ActionBarActivity implements Adap
     protected void loadFinish() {
         mSwipeLayout.setRefreshing(false);
         isLoading = false;
-        mLoadLayout.setVisibility(View.GONE);
+//        mLoadLayout.setVisibility(View.GONE);
+        mListView.removeFooterView(mFootView);
     }
 
     @Override
@@ -148,7 +150,8 @@ public abstract class BaseLoadActivity extends ActionBarActivity implements Adap
         if (totalItemCount == lastVisibleItem && scrollState == SCROLL_STATE_IDLE) {
             if (!isLoading) {
                 isLoading = true;
-                mLoadLayout.setVisibility(View.VISIBLE);
+//                mLoadLayout.setVisibility(View.VISIBLE);
+                mListView.addFooterView(mFootView);
                 // 加载更多
                 loadNextData();
             }
