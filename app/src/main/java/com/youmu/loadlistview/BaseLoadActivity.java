@@ -2,8 +2,10 @@ package com.youmu.loadlistview;
 
 import android.content.Context;
 import android.database.DataSetObserver;
+import android.os.Bundle;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBarActivity;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewStub;
 import android.view.ViewTreeObserver;
@@ -12,32 +14,42 @@ import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.ListView;
 
+import butterknife.ButterKnife;
+import butterknife.InjectView;
+
 /**
  * Created by youzh on 2015/3/20.
  */
 public abstract class BaseLoadActivity extends ActionBarActivity implements AdapterView.OnItemClickListener, AbsListView.OnScrollListener {
+    @InjectView(R.id.listView)
+    ListView mListView;
+    @InjectView(R.id.refreshLayout)
+    SwipeRefreshLayout mSwipeLayout;
+    @InjectView(R.id.empty_vs)
+    ViewStub mEmptyVs;
 
-
-    protected SwipeRefreshLayout mSwipeLayout;
-    protected ListView mListView;
     private int page = 0;
     private int oldPage = 0;
     private BaseAdapter mAdapter;
-    private ViewStub mEmptyVs;
     private View mEmptyView;
     private Context ctx;
     private View mLoadLayout;// 加载更多的view
     private int totalItemCount;// Item总数量；
     private int lastVisibleItem;// 最后一个可见的item；
     boolean isLoading;// 正在加载；
-    View mFootView;
+    private View mFootView;
 
-    public void initLoad(Context ctx, SwipeRefreshLayout swipeLayout, ListView listView, ViewStub mEmptyVs, BaseAdapter adapter) {
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        ButterKnife.inject(this);
+    }
+
+    public void initLoad(Context ctx, BaseAdapter adapter) {
         this.ctx = ctx;
-        this.mSwipeLayout = swipeLayout;
-        this.mListView = listView;
+
         this.mAdapter = adapter;
-        this.mEmptyVs = mEmptyVs;
         initView();
         loadFirstData();
     }
@@ -81,7 +93,6 @@ public abstract class BaseLoadActivity extends ActionBarActivity implements Adap
         // 添加FootView
         mFootView = View.inflate(ctx, R.layout.loading_more, null);
         mLoadLayout = mFootView.findViewById(R.id.more_load_layout);
-//        mLoadLayout.setVisibility(View.GONE);
 
         mListView.setAdapter(mAdapter);
         mListView.setOnItemClickListener(this);
@@ -131,9 +142,17 @@ public abstract class BaseLoadActivity extends ActionBarActivity implements Adap
         mSwipeLayout.setRefreshing(false);
         isLoading = false;
 //        mLoadLayout.setVisibility(View.GONE);
-        mListView.removeFooterView(mFootView);
+        if (oldPage == page) {
+            if (mListView.getFooterViewsCount() > 0)
+                mListView.removeFooterView(mFootView);
+        } else if (mListView.getFooterViewsCount() == 0){
+            mListView.addFooterView(mFootView);
+        }
     }
-
+    protected void clear() {
+        if (mListView.getFooterViewsCount() > 0)
+            mListView.removeFooterView(mFootView);
+    }
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
@@ -142,17 +161,16 @@ public abstract class BaseLoadActivity extends ActionBarActivity implements Adap
     @Override
     public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
         this.lastVisibleItem = firstVisibleItem + visibleItemCount;
+//        view.getLastVisiblePosition();
         this.totalItemCount = totalItemCount;
+
     }
 
     @Override
     public void onScrollStateChanged(AbsListView view, int scrollState) {
-        if (totalItemCount == lastVisibleItem && scrollState == SCROLL_STATE_IDLE) {
+        if ((totalItemCount) == lastVisibleItem && scrollState == SCROLL_STATE_IDLE) {
             if (!isLoading) {
                 isLoading = true;
-//                mLoadLayout.setVisibility(View.VISIBLE);
-                mListView.addFooterView(mFootView);
-                mListView.setSelection(mListView.getBottom());
                 // 加载更多
                 loadNextData();
             }

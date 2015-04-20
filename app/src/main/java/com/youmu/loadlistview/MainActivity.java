@@ -16,23 +16,16 @@ import butterknife.InjectView;
 
 
 public class MainActivity extends BaseLoadActivity {
-    @InjectView(R.id.listView)
-    ListView mListview;
-    @InjectView(R.id.refreshLayout)
-    SwipeRefreshLayout mRefreshLayout;
-    @InjectView(R.id.empty_vs)
-    ViewStub mEmptyVs;
+
     private ArrayList<String> mDataList = new ArrayList<String>();
     private ArrayAdapter<String> mAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        ButterKnife.inject(this);
 
         mAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, android.R.id.text1, mDataList);
-        initLoad(this, mRefreshLayout, mListview, mEmptyVs, mAdapter);
+        initLoad(this, mAdapter);
     }
 
     private void getData(final String dataName) {
@@ -40,15 +33,18 @@ public class MainActivity extends BaseLoadActivity {
             @Override
             public void run() {
                 try {
-                    Thread.sleep(2000);
+                    Thread.sleep(10000);
                     runOnUiThread(new Runnable() {
 
                         @Override
                         public void run() {
-                            for (int i = 0; i < 15; i++) {
+                            for (int i = 0; i < 10; i++) {
                                 mDataList.add(dataName + i);
                             }
                             mAdapter.notifyDataSetChanged();
+//                            if (10 < 20) {
+//                                restorePage();
+//                            }
                             loadFinish();
                         }
                     });
@@ -73,6 +69,7 @@ public class MainActivity extends BaseLoadActivity {
         int id = item.getItemId();
 
         if (id == R.id.action_clear) {
+            clear();
             mDataList.clear();
             mAdapter.notifyDataSetChanged();
             return true;
